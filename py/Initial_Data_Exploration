@@ -1,0 +1,27 @@
+import geopandas as gpd
+from shapely.geometry import Point, Polygon
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+%matplotlib inline
+import os
+
+
+# Change working directory to the folder where the data file is located
+os.chdir('/Users/Alia/Documents/PPOL564/Final Project/')
+
+# Import test dataset to play around with GeoPandas
+usa = gpd.read_file("states_21basic/states.shp")
+
+usa.head()
+
+usa.plot()
+
+# Import income data from IPUMS USA
+income = np.genfromtxt('Income.dat',
+                     skip_header=0,
+                     skip_footer=1,
+                     names=True,
+                     dtype=None,
+                     delimiter=' ')
+# Dataset appears to be too large...will rerun from IPUMS with fewer samples
