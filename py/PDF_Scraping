@@ -1,0 +1,49 @@
+import sys
+sys.executable
+
+!/Users/Alia/opt/anaconda3/bin/python3 -m pip install PyPDF2
+import PyPDF2
+
+!/Users/Alia/opt/anaconda3/bin/python3 -m pip install RISE
+import RISE
+
+import os
+
+# Change working directory to the location where the data file is located
+os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data/State_Plans')
+
+pdfFileObj = open('MD_Plan_2020.pdf', 'rb')
+pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
+pdfReader.numPages
+pdfReader.isEncrypted
+pageObj = pdfReader.getPage(9)
+print(pageObj.extractText())
+pdfFileObj.close()
+
+# %% -----------------------------------------
+
+# Extract all the text content in the PDF
+
+def read_pdf(file):
+
+    with open(file, 'rb') as pdfFileObj:
+        # Open the pdf
+        pdfReader = PyPDF2.PdfFileReader(pdfFileObj)
+
+        # Locate the number of pages
+        n_pages = pdfReader.numPages
+
+        # Loop through the pages and store the content by
+        # appending to a string
+        content = ""
+        for i in range(n_pages):
+            content += pdfReader.getPage(i).extractText()
+
+    return content
+
+# Examine the content
+mc_content = read_pdf("MD_Plan_2020.pdf")
+split1 = mc_content.split("Estimated Funding Allocation, 2604(C), 2605(k)(1), 2605(b)(9), 2605(b)(16) - Assurances 9 and 16")[1]
+split2 = split1.split("€€€€€",1)[1]
+split3 = split2.split("TOTAL",1)[0]
+split4 = split3.split("€€€€€")

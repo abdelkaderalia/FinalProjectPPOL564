@@ -1,0 +1,76 @@
+import pandas as pd
+import numpy as np
+import os
+import time
+import random
+import requests
+import urllib.request # For downloading PDFs from url
+from bs4 import BeautifulSoup
+
+import warnings
+warnings.filterwarnings("ignore")
+
+# Store link to LIHEAP Clearinghouse webpage
+url = "https://liheapch.acf.hhs.gov/stplans2021.htm"
+page = requests.get(url)
+page.status_code
+
+soup = BeautifulSoup(page.content,'html.parser')
+
+# Check tables on the webpage to find the one we are interested in
+tables = pd.read_html(url)
+tables[0]
+tables[1]
+# The second table is the one we want! It has links to all the State LIHEAP plans in it.
+
+# Define table from page content
+table = soup.findAll('table')[1]
+
+# Create list to store links from table
+urls = []
+# Store first part of link
+url_head = 'https://liheapch.acf.hhs.gov/'
+
+for cell in table.select('a'):
+    link = cell['href']
+    full_url = url_head + link
+    urls.append(full_url)
+
+# Check how many urls were stored
+len(urls)
+urls
+
+# Minnesota link is different
+del urls[23]
+urls
+
+# Set working directory to folder where State Plans should be stored
+os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data/State_Plans')
+
+# Define a function to download the State Plans using the compiled list of urls
+def download_files(urls):
+    for url in urls:
+        file_name = url.split("docs/")[1] # Split link to isolate file name
+        response = urllib.request.urlopen(url)
+        file = open(file_name, 'wb')
+        file.write(response.read())
+        file.close()
+
+str = 'https://liheapch.acf.hhs.gov/stplans/2016/MA_STPLAN_2016.pdf'
+str.split("2016/")[1].split("_",1)[0] + "_Plan_2016.pdf"
+
+# Define a function to download the State Plans using the compiled list of urls
+def download_files2016(urls):
+    for url in urls:
+        #file_name = url.split("2016/")[1].split("_",1)[0] + "_Plan_2016.pdf" # Split link to isolate file name
+        file_name = "MN_Plan_2016.pdf"
+        response = urllib.request.urlopen(url)
+        file = open(file_name, 'wb')
+        file.write(response.read())
+        file.close()
+
+# Download the PDFs of the State Plans
+download_files(urls)
+
+download_files2016(urls)
+download_files2016('https://liheapch.acf.hhs.gov/http://mn.gov/commerce-stat/pdfs/draft-ffy2016-liheap-state-plan.pdf')
