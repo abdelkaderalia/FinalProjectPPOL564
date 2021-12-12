@@ -1,0 +1,147 @@
+import pandas as pd
+import numpy as np
+import os
+import time
+import random
+import requests
+import urllib.request # For downloading files from url
+from bs4 import BeautifulSoup
+
+import warnings
+warnings.filterwarnings("ignore")
+
+# Download Heating Degree Data and Cooling Degree Day .txt files
+
+def download_HDD_CDD(store,url,type):
+    # Set webpage
+    page = requests.get(url)
+    # Check request was successful
+    if page.status_code == 200:
+        soup = BeautifulSoup(page.content,'html.parser')
+        table = soup.findAll('table')[0]
+
+        # Create list to store links from table
+        urls = []
+
+        # Skip table header and store all year links
+        for cell in table.select('a')[5:]:
+            link = cell['href']
+            full_url = url + link
+            urls.append(full_url)
+
+        # Create a list to store monthly links from each year table
+        m_urls = []
+
+        # Loop through each year link
+        for url in urls:
+            page = requests.get(url)
+            if page.status_code == 200:
+                soup = BeautifulSoup(page.content,'html.parser')
+                table = soup.findAll('table')[0]
+
+                # Skip table header and store all monthly links
+                for cell in table.select('a')[4:]:
+                    # Create list of different file name formats
+                    names = ['dec ' + url.split("/")[-2] + '.txt','dec, ' + url.split("/")[-2] + '.txt','Dec ' + url.split("/")[-2] + '.txt']
+                    # Only store links for December files (to pull cumulative HDD and CDD for the year)
+                    if cell.text in names:
+                        link = cell['href']
+                        full_url = url + link
+                        m_urls.append(full_url)
+
+        # Set working directory to folder where files should be stored
+        os.chdir(store)
+
+        # Loop through monthly links
+        for url in m_urls:
+            # Links for HDD and CDD data are slightly different, need to split differently to generate file name
+            if type == 'HDD':
+                spl = 'monthly%20states/'
+            else:
+                spl = 'monthly%20cooling%20degree%20days%20state/'
+            # Split link to generate file name
+            file_name = url.split(spl)[1].split("/")[1].replace("%","") # Split link to isolate file name
+            # Open and download file
+            response = urllib.request.urlopen(url)
+            file = open(file_name, 'wb')
+            file.write(response.read())
+            file.close()
+
+# Download the December.txt files for HDD
+hdd_store = '/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data/HDD_Data'
+hdd_url = 'https://ftp.cpc.ncep.noaa.gov/htdocs/products/analysis_monitoring/cdus/degree_days/archives/Heating%20degree%20Days/monthly%20states/'
+download_HDD_CDD(hdd_store,hdd_url,'HDD')
+
+# Download the December.txt files for CDD
+cdd_store = '/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data/CDD_Data'
+cdd_url = 'https://ftp.cpc.ncep.noaa.gov/htdocs/products/analysis_monitoring/cdus/degree_days/archives/Cooling%20Degree%20Days/monthly%20cooling%20degree%20days%20state/'
+download_HDD_CDD(cdd_store,cdd_url,'CDD')
+
+# Download December 1997 CDD file (edge case, weird formatting)
+url = 'https://ftp.cpc.ncep.noaa.gov/htdocs/products/analysis_monitoring/cdus/degree_days/archives/Cooling%20Degree%20Days/monthly%20cooling%20degree%20days%20state/1997/dec%201997'
+spl = 'monthly%20cooling%20degree%20days%20state/'
+file_name = url.split(spl)[1].split("/")[1].replace("%","") + '.txt'# Split link to isolate file name
+# Open and download file
+response = urllib.request.urlopen(url)
+file = open(file_name, 'wb')
+file.write(response.read())
+file.close()
+
+###_____________________________________________________________________________________________________
+
+# Read in temp data from .txt files
+def read_HDD_CDD(store,type):
+    os.chdir(store)
+
+    # Create name for column based on HDD or CDD
+    col_name = 'Total_' + type
+
+    # Create DF to store data
+    full_df = pd.DataFrame(columns=['State','Year',col_name])
+
+    # Loop through .txt file
+    for f_name in os.listdir(store):
+        # Check that all are .txt
+        if f_name.endswith('.txt'):
+            # Pull year from file name
+            year = f_name.split('20',1)[1].split('.txt')[0]
+            # Read in .txt as fixed with file, skipping header
+            df = pd.read_fwf(f_name,skiprows=15,widths=[17,5,5,5,8,6,6,6,6],header=None)
+            # Limit to only states and DC
+            df = df[0:51]
+            # Drop unnecessary columns (only need the cumulative HDD or CDD)
+            df = df.drop(columns=[1,2,3,5,6,7,8])
+            # Rename columns
+            df.columns=['State',col_name]
+            # Add year column
+            df.insert(1,'Year',year)
+            # Add year data to full df
+            full_df = full_df.append(df,ignore_index=True)
+
+    # Correct misspelled name for DC (LOL at least it spelled wrong in every single case, good job NOAA)
+    full_df = full_df.replace(["DISTRCT COLUMBIA"],"DISTRICT OF COLUMBIA")
+    # Sort on State and Year
+    full_df = full_df.sort_values(["State","Year"],ascending = (True,True))
+    full_df = full_df.reset_index(drop=True)
+    # Add concatenated State_Year column
+    full_df['State_Year'] = full_df['State'] + ' ' + full_df['Year']
+
+    return full_df
+
+# Create df of HDD data
+HDD_df = read_HDD_CDD(hdd_store,'HDD')
+# Create df of CDD results
+CDD_df = read_HDD_CDD(cdd_store,'CDD')
+
+# Merge HDD and CDD data
+temp_df = HDD_df.merge(CDD_df, on='State_Year',how='left')
+# Drop duplicate columns
+temp_df = temp_df.drop(columns=['State_y','Year_y'])
+# Rename columns
+temp_df = temp_df.rename(columns={"State_x":"State","Year_x":"Year"})
+# Reorder columns
+temp_df = temp_df[['State','Year','State_Year','Total_HDD','Total_CDD']]
+
+# Store as .csv file
+os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data')
+temp_df.to_csv('HDD_CDD.csv',index = False, header=True)
