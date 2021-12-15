@@ -1,0 +1,72 @@
+# Data Management/Investigation
+import os
+import pandas as pd
+import numpy as np
+import missingno as miss
+from plotnine import *
+import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings("ignore")
+
+# For pre-processing data
+from sklearn import preprocessing as pp
+from sklearn.compose import ColumnTransformer
+
+# For splits and CV
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold # Cross validation
+from sklearn.model_selection import cross_validate # Cross validation
+from sklearn.model_selection import GridSearchCV # Cross validation + param. tuning.
+
+# Machine learning methods
+from sklearn.linear_model import LinearRegression as LM
+from sklearn.neighbors import KNeighborsRegressor as KNN
+from sklearn.tree import DecisionTreeRegressor as DTree
+from sklearn import tree # For plotting the decision tree rules
+from sklearn.ensemble import BaggingRegressor as Bag
+from sklearn.ensemble import RandomForestRegressor as RF
+
+# For evaluating our model's performance
+import sklearn.metrics as m
+
+# Pipeline to combine modeling elements
+from sklearn.pipeline import Pipeline
+
+os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Clean_Data')
+
+####_______________________________________________________________________
+
+# LIHEAP Formula Input data
+dat = pd.read_csv("Complete_Data.csv")
+dat.shape
+
+# Available features
+list(dat)
+
+# Check for missingness
+miss.matrix(dat)
+
+y = dat['Percent_Allocation'] # OUTCOME: The percent allocation of LIHEAP funds to each state in that year
+X = dat.drop(columns=['Percent_Allocation','State','Year','State_Year']) # PREDICTORS: all except the outcome and non-predictive identifiers
+
+# Split the data
+train_X, test_X, train_y, test_y = train_test_split(X,y,test_size=.25,random_state=1997)
+# Look at the training data
+train_X.shape
+
+print(train_X.shape[0]/dat.shape[0])
+print(test_X.shape[0]/dat.shape[0])
+
+# Create a copy of training data to avoid visualizing test data
+d = train_X.select_dtypes(include=["int","float"]).melt()
+
+# Plot the continuous Variables
+plot_continuous = (
+    ggplot(d,aes(x="value")) +
+    geom_histogram(bins=25) +
+    facet_wrap("variable",scales='free') +
+    theme(figure_size=(20,15),
+          subplots_adjust={'wspace':.25,'hspace':.5})
+)
+
+print(plot_continuous)

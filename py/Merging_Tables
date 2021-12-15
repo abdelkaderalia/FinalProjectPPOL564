@@ -23,6 +23,10 @@ df.insert(2,'State_Year',df['State'] + ' ' + df['Year'])
 df = df.sort_values(["State","Year"],ascending = (True,True))
 df = df.reset_index(drop=True)
 
+# Store as .csv file
+os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Clean_Data')
+df.to_csv('Eligible_Households.csv',index = False, header=True)
+
 ### Add response variable (% Allocation)
 os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data')
 alloc = pd.read_csv('Allocation_Pre_Hold_Harmless.csv')
@@ -53,14 +57,15 @@ alloc_df.to_csv('Percent_Allocation.csv',index = False, header=True)
 
 ### MERGE ALL TABLES!!!!!
 
-# Read in all other data
+# Read in all data
 temp = pd.read_csv('Temperature_Variables.csv')
 LI_heaters = pd.read_csv('LI_Heaters.csv')
 cons = pd.read_csv('Consumption_Variables.csv')
 exp = pd.read_csv('Expenditure_Variables.csv')
 prices = pd.read_csv('Price_Variables.csv')
+alloc = pd.read_csv('Percent_Allocation.csv')
 
-for dat in [temp,LI_heaters,cons,exp,prices,alloc_df]:
+for dat in [temp,LI_heaters,cons,exp,prices,alloc]:
     df = df.merge(dat, on='State_Year',how='left')
     # Drop duplicate columns
     df = df.drop(columns=['State_y','Year_y'])
