@@ -1,0 +1,14 @@
+import pandas as pd
+import numpy as np
+import os
+import time
+import random
+import requests
+import PyPDF2
+import urllib.request # For downloading files from url
+from bs4 import BeautifulSoup
+
+import warnings
+warnings.filterwarnings("ignore")
+
+os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data')

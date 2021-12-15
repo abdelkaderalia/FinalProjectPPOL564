@@ -11,6 +11,8 @@ from bs4 import BeautifulSoup
 import warnings
 warnings.filterwarnings("ignore")
 
+### Low Income Heaters
+
 os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data/LI_Heaters')
 li_store = '/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data/LI_Heaters'
 
@@ -49,18 +51,26 @@ full_df.to_csv('LI_Heaters.csv',index = False, header=True)
 
 ###_____________________________________________________________________________________________________
 
+### SEDS Data
+
 os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data')
+# Read in data
 cons = pd.read_csv('Energy_Consumption.csv')
 exp = pd.read_csv('Energy_Expenditure.csv')
 prices = pd.read_csv('Energy_Prices.csv')
 codes = pd.read_csv('Codes.csv')
 
-cols = ['State','Year','State_Year']
-for name in codes['Variable Name'].tolist():
-    cols.append(name)
+# Create list of desired MSN codes to use for filtering
+codes_filter = codes['MSN Code'].to_list()
 
-full_df = pd.DataFrame(columns=cols)
+# Subset columns with variable names and corresponding MSN codes
+codes_lookup = codes.iloc[:, 0:2]
+# Create a dictionary to rename variables
+codes_dict  = dict(codes_lookup.values)
+# Invert the dictionary
+codes_dict = dict(map(reversed, codes_dict.items()))
 
+# Create dictionary of state names and abbrevs
 us_state_to_abbrev = {
     "Alabama": "AL",
     "Alaska": "AK",
@@ -121,14 +131,144 @@ us_state_to_abbrev = {
     "United States Minor Outlying Islands": "UM",
     "U.S. Virgin Islands": "VI",
 }
-
 # Invert the dictionary
 abbrev_to_us_state = dict(map(reversed, us_state_to_abbrev.items()))
 
+# Filter all data sheets to only desired MSN codes (for some reason, this would not work in a loop)
+boolean_series = cons.MSN.isin(codes_filter)
+cons = cons[boolean_series]
+
+boolean_series = exp.MSN.isin(codes_filter)
+exp = exp[boolean_series]
+
+boolean_series = prices.MSN.isin(codes_filter)
+prices = prices[boolean_series]
+
+# Format each sheet
 for sheet in [cons,exp,prices]:
     sheet['State'] = sheet['State'].map(abbrev_to_us_state)
+    sheet['State'] = sheet['State'].str.upper()
+    sheet = sheet.drop(columns=sheet.columns[0], axis=1, inplace=True)
 
-codes_lookup = codes.iloc[:, 0:2]
-codes_dict  = dict(codes_lookup.values)
+# Add statecode column (again, would not work in a loop)
+cons.insert(2,'State_Code',cons['State'] + ' ' + cons['MSN'])
+exp.insert(2,'State_Code',exp['State'] + ' ' + exp['MSN'])
+prices.insert(2,'State_Code',prices['State'] + ' ' + prices['MSN'])
+
+# Drop extra columns
+for sheet in [cons,exp,prices]:
+    sheet = sheet.drop(columns=['State','MSN'], axis=1, inplace=True)
+
+### Energy_Consumption
+#### (Same code below is executed for Consumption, Expenditure, and Price data. Tried to write a function but it kept throwing errors)
 
 cons
+
+# Filter codes to only desired type
+type_filter = ['Consumption']
+boolean_series = codes.Code_Type.isin(type_filter)
+code_list = codes[boolean_series]
+
+# Use filtered codes to create a column list
+cols = ['State','Year','State_Year']
+for name in code_list['MSN Code'].tolist():
+    cols.append(name)
+
+# Pull core columns from full_df in the section above (Low Income Heaters)
+cons_df = full_df[['State','Year','State_Year']]
+# Add  columns for variables
+ons_df = cons_df.reindex(columns = cols)
+
+for stateyear in cons_df['State_Year']:
+    for code in code_list['MSN Code'].tolist():
+        MSN = code
+        year = stateyear[-4:]
+        state = stateyear.split(' ' + year)[0]
+        statecode = state + ' ' + MSN
+
+        # Get index for State_Code in the consumption data
+        ind = cons.index[cons['State_Code'] == statecode].to_list()[0]
+        # Lookup consumption value for that State_Code in specific year
+        value = cons.at[ind,year]
+
+        # Get index for State_Year in the dataframe that we want to fill in
+        ind2 = cons_df.index[cons_df['State_Year'] == stateyear].to_list()[0]
+        # Fill in the value at that index for the specific MSN code
+        cons_df.loc[ind2,MSN] = value
+
+# Rename variables
+cons_df = cons_df.rename(columns=codes_dict)
+
+# Store as .csv file
+os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Clean_Data')
+cons_df.to_csv('Consumption_Variables.csv',index = False, header=True)
+
+### Energy_Expenditure
+
+exp
+
+type_filter = ['Expenditure']
+boolean_series = codes.Code_Type.isin(type_filter)
+code_list = codes[boolean_series]
+
+cols = ['State','Year','State_Year']
+for name in code_list['MSN Code'].tolist():
+    cols.append(name)
+
+exp_df = full_df[['State','Year','State_Year']]
+exp_df = exp_df.reindex(columns = cols)
+
+for stateyear in exp_df['State_Year']:
+    for code in code_list['MSN Code'].tolist():
+        MSN = code
+        year = stateyear[-4:]
+        state = stateyear.split(' ' + year)[0]
+        statecode = state + ' ' + MSN
+
+        ind = exp.index[exp['State_Code'] == statecode].to_list()[0]
+        value = exp.at[ind,year]
+
+        ind2 = exp_df.index[exp_df['State_Year'] == stateyear].to_list()[0]
+        exp_df.loc[ind2,MSN] = value
+
+# Rename variables
+exp_df = exp_df.rename(columns=codes_dict)
+
+# Store as .csv file
+os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Clean_Data')
+exp_df.to_csv('Expenditure_Variables.csv',index = False, header=True)
+
+### Energy_Prices
+
+prices
+
+type_filter = ['Price']
+boolean_series = codes.Code_Type.isin(type_filter)
+code_list = codes[boolean_series]
+
+cols = ['State','Year','State_Year']
+for name in code_list['MSN Code'].tolist():
+    cols.append(name)
+
+price_df = full_df[['State','Year','State_Year']]
+price_df = price_df.reindex(columns = cols)
+
+for stateyear in price_df['State_Year']:
+    for code in code_list['MSN Code'].tolist():
+        MSN = code
+        year = stateyear[-4:]
+        state = stateyear.split(' ' + year)[0]
+        statecode = state + ' ' + MSN
+
+        ind = prices.index[prices['State_Code'] == statecode].to_list()[0]
+        value = prices.at[ind,year]
+
+        ind2 = price_df.index[price_df['State_Year'] == stateyear].to_list()[0]
+        price_df.loc[ind2,MSN] = value
+
+# Rename variables
+price_df = price_df.rename(columns=codes_dict)
+
+# Store as .csv file
+os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Clean_Data')
+price_df.to_csv('Price_Variables.csv',index = False, header=True)
