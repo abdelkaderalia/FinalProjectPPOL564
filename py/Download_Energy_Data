@@ -177,7 +177,7 @@ for name in code_list['MSN Code'].tolist():
 # Pull core columns from full_df in the section above (Low Income Heaters)
 cons_df = full_df[['State','Year','State_Year']]
 # Add  columns for variables
-ons_df = cons_df.reindex(columns = cols)
+cons_df = cons_df.reindex(columns = cols)
 
 for stateyear in cons_df['State_Year']:
     for code in code_list['MSN Code'].tolist():

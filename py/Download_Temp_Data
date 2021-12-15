@@ -132,13 +132,34 @@ temp_df = temp_df.rename(columns={"State_x":"State","Year_x":"Year"})
 # Reorder columns
 temp_df = temp_df[['State','Year','State_Year','Total_HDD','Total_CDD']]
 
+# Add Lag_HDD and Lag_CDD (2 year lag)
+lag_temp_df = temp_df[['State','Year','State_Year','Total_HDD','Total_CDD']]
+lag_temp_df['Lag_Year'] = lag_temp_df['Year'].astype(int) - 2
+lag_temp_df['Lag_State_Year'] = lag_temp_df['State'] + ' ' + lag_temp_df['Lag_Year'].astype(str)
+lag_temp_df.insert(5,'Lag_HDD',np.nan)
+lag_temp_df.insert(6,'Lag_CDD',np.nan)
+
+for stateyear in lag_temp_df['Lag_State_Year']:
+        year = stateyear[-4:]
+        if year != '1996' and year != '1997':
+            state = stateyear.split(' ' + year)[0]
+            ind = lag_temp_df.index[lag_temp_df['State_Year'] == stateyear].to_list()[0]
+            HDD_value = lag_temp_df.at[ind,'Total_HDD']
+            CDD_value =lag_temp_df.at[ind,'Total_CDD']
+
+            ind2 = lag_temp_df.index[lag_temp_df['Lag_State_Year'] == stateyear].to_list()[0]
+            lag_temp_df.loc[ind2,'Lag_HDD'] = HDD_value
+            lag_temp_df.loc[ind2,'Lag_CDD'] = CDD_value
+lag_temp_df = lag_temp_df.drop(columns=['Lag_Year','Lag_State_Year'])
+
 # Store as .csv file
 os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Clean_Data')
 temp_df.to_csv('HDD_CDD.csv',index = False, header=True)
 
 ###_____________________________________________________________________________________________________
 
-norm_hdd_file = '/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data/30_Yr_Norm_HDDs.csv'
+os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data')
+norm_hdd_file = '30_Yr_Norm_HDDs.csv'
 
 norm_hdd = pd.read_csv(norm_hdd_file)
 norm_hdd['State'] = norm_hdd['State'].str.upper()
@@ -147,16 +168,16 @@ norm_hdd['30NormHDD'] = norm_hdd['30NormHDD'].astype(int)
 norm_hdd.dtypes
 
 # Merge Norm HDDs onto HDD/CDD
-temp_df = temp_df.merge(norm_hdd, on='State',how='left')
-temp_df.dtypes
+lag_temp_df = lag_temp_df.merge(norm_hdd, on='State',how='left')
+lag_temp_df.dtypes
 
-temp_df['Year'] = temp_df['Year'].astype(int)
-temp_df['Total_HDD'] = temp_df['Total_HDD'].astype(int)
-temp_df['Total_CDD'] = temp_df['Total_CDD'].astype(int)
-temp_df['State'] = temp_df['State'].astype(str)
-temp_df['State_Year'] = temp_df['State_Year'].astype(str)
-temp_df.dtypes
+lag_temp_df['Year'] = lag_temp_df['Year'].astype(int)
+lag_temp_df['Total_HDD'] = lag_temp_df['Total_HDD'].astype(int)
+lag_temp_df['Total_CDD'] = lag_temp_df['Total_CDD'].astype(int)
+lag_temp_df['State'] = lag_temp_df['State'].astype(str)
+lag_temp_df['State_Year'] = lag_temp_df['State_Year'].astype(str)
+lag_temp_df.dtypes
 
 # Store as .csv file
 os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Clean_Data')
-temp_df.to_csv('Temperature_Variables.csv',index = False, header=True)
+lag_temp_df.to_csv('Temperature_Variables.csv',index = False, header=True)
