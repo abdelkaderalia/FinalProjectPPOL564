@@ -1,0 +1,415 @@
+# %% markdown
+# <center><h1> PPOL564 | Data Science 1 | Foundations<br><br>Statistical Learning Walkthrough</h1></center>
+# <center><h2><br>Comparing and Tuning Models</h2></center>
+# %% markdown
+# # Dependencies
+# %% codecell
+# Data Management/Investigation
+import pandas as pd
+import numpy as np
+import missingno as miss
+from plotnine import *
+import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings("ignore")
+
+# For pre-processing data
+from sklearn import preprocessing as pp
+from sklearn.compose import ColumnTransformer
+
+# For splits and CV
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold # Cross validation
+from sklearn.model_selection import cross_validate # Cross validation
+from sklearn.model_selection import GridSearchCV # Cross validation + param. tuning.
+
+# Machine learning methods
+from sklearn.linear_model import LinearRegression as LM
+from sklearn.neighbors import KNeighborsRegressor as KNN
+from sklearn.tree import DecisionTreeRegressor as DTree
+from sklearn import tree # For plotting the decision tree rules
+from sklearn.ensemble import BaggingRegressor as Bag
+from sklearn.ensemble import RandomForestRegressor as RF
+
+# For evaluating our model's performance
+import sklearn.metrics as m
+
+# Pipeline to combine modeling elements
+from sklearn.pipeline import Pipeline
+# %% markdown
+# # Data
+# %% markdown
+# DC Housing Price data.
+# %% codecell
+# Data on Housing Prices in DC
+dat = pd.read_csv("dc_housing_prices.csv")
+dat.shape
+# %% codecell
+# Available features
+list(dat)
+# %% markdown
+# Look at **missingness** in the data: Issue we're missing information on the outcome `PRICE`
+# %% codecell
+miss.matrix(dat)
+# %% markdown
+# Let's do the following:
+# - Only retain data values where the outcome is measured.
+# - Only retain observations where there is a selling price (i.e. when `PRICE == 0`, the house hasn't been sold. We're interested in what predict the sell price _given that it was sold_.)
+# - Subsample the data. We'll only look at some of this data for now (doing this so models will run faster, you can run the rest of the data in the coding discussion.)
+# %% codecell
+# Drop all observations where the outcome is missing
+dat = dat[~dat.PRICE.isna()]
+
+# Only houses that are sold
+dat = dat[dat.PRICE > 0]
+
+# Subsample
+dat = dat.sample(1000,random_state=1988)
+# %% markdown
+# Set up data in the **SKLEARN framework** (i.e. outcome separated from the predictors).
+#
+# > _Note_: I'm not going use all the data for this walkthrough
+# %% codecell
+y = np.log(dat['PRICE']) # OUTCOME: log selling price (some houses are ridiculuously expensive)
+X = dat[['BATHRM','ROOMS','LANDAREA']] # PREDICTORS: simplified for our purposes
+X['LANDAREA'] = np.log(X['LANDAREA']) # Log land area (some house are on a lot of land, other on barely a plot)
+# %% markdown
+# Split the data
+# %% codecell
+train_X, test_X, train_y, test_y = train_test_split(X,y,test_size=.25,random_state=1988)
+# %% markdown
+# ## Explore the training data
+# %% codecell
+# Look at the training data
+train_X.shape
+# %% markdown
+# How is the data distributed?
+# %% codecell
+(
+    ggplot(train_X.melt(),aes(x="value")) +
+    geom_histogram() +
+    facet_wrap("variable",scales="free") +
+    theme_minimal() +
+    theme(figure_size = (10,3))
+)
+# %% markdown
+# Insights:
+# - Scale will be an issue. So we need to pre-process
+# - `BATHRM` and `ROOMS` follow a binomial distribution
+# %% markdown
+# Look at the outcome `PRICE` and see if there is any red flags.
+# %% codecell
+(
+    ggplot(pd.DataFrame(dict(price=train_y)),
+           aes(x="price")) +
+    geom_histogram() +
+    theme_minimal() +
+    theme(figure_size = (7,3))
+)
+# %% markdown
+# Let's just look at how our predictors relate to the outcome.
+# %% codecell
+D = train_X.copy()
+D['PRICE'] = train_y
+
+(
+    ggplot(D.melt(id_vars=["PRICE"]),
+           aes(x="value",y="PRICE"))+
+    geom_point(alpha=.5) +
+    facet_wrap("variable",scales="free") +
+    geom_smooth(method="lm",se=False,color="red") +
+    theme_minimal() +
+    theme(figure_size = (10,3))
+)
+# %% markdown
+# ## Pre-Processing
+# %% markdown
+# Let's rescale our training data for now, but we'll put the preprocessing into a modeling pipeline later on.
+# %% codecell
+# Let's
+scaler = pp.MinMaxScaler()
+col_names = list(train_X)
+train_X = scaler.fit_transform(train_X)
+# %% codecell
+# Convert back into data frame
+train_X = pd.DataFrame(train_X,columns=col_names)
+train_X
+# %% markdown
+# # Modeling
+#
+# The problem that we're working on is a **regression problem** (i.e. we have a continuously distributed outcome variable). We've played around with a few models that can tackle problems such as these.
+#
+# - Linear Regression
+# - KNN
+# - Decision Trees
+# - Bagging
+# - Random Forest
+#
+# Luckily, implementing each of these (very different) algorithms is straight-forward using the `sklearn` API.
+#
+# For each model, we'll use **K-fold cross-validation** to estimate the test error. As we saw a few weeks back, we can do this easily with the `cross_validate` method. We'll use **5 folds** when cross-validating.
+#
+# Recall that in order to make valid comparisons across models, we need to use the same data splits for each fold. We can do this by creating a KFold generator that will ensure we're using the same break points when training the model.
+# %% codecell
+fold_generator = KFold(n_splits=5, shuffle=True,random_state=111)
+# %% markdown
+# Let's run each model individually (using defaults for any tuning parameters... more on this later); let's then compare the performance of the different models in a plot.
+#
+# We'll use **mean squared error** as our performance metrics.
+# %% codecell
+use_metrics = ["neg_mean_squared_error"]
+# %% markdown
+# ## Run the Models
+# %% markdown
+# ### Linear Model
+# %% codecell
+lm_scores = cross_validate(LM(),train_X,train_y, cv = fold_generator, scoring =use_metrics)
+# %% markdown
+# ### KNN
+# %% codecell
+knn_scores = cross_validate(KNN(),train_X,train_y, cv = fold_generator, scoring =use_metrics)
+# %% markdown
+# ### Decision Tree
+# %% codecell
+dt_scores = cross_validate(DTree(),train_X,train_y, cv = fold_generator, scoring =use_metrics)
+# %% markdown
+# #### Side Note: Plotting a Decision Tree
+# First, a quick side note on the decision trees. When we built a tree from scratch, we discussed looking at the **decision rules** of the tree. There is a very straight forward way of doing this in `sklearn`.
+# %% codecell
+mod = DTree(max_depth=3) # Initialize the modeling object (just as we did)
+mod.fit(train_X,train_y) # Fit the mode
+
+# Plot the tree
+plt.figure(figsize=(12,8),dpi=300)
+rules = tree.plot_tree(mod,feature_names = col_names,fontsize=8)
+# %% markdown
+# ### Bagging
+# %% codecell
+bag_scores = cross_validate(Bag(),train_X,train_y, cv = fold_generator, scoring =use_metrics)
+# %% markdown
+# ### Random Forest
+# %% codecell
+rf_scores = cross_validate(RF(),train_X,train_y, cv = fold_generator, scoring =use_metrics)
+# %% markdown
+# ## Compare Models
+# %% codecell
+# Output is a dictionary
+lm_scores
+# %% markdown
+# We can collect the scores of the metrics we care about.
+# %% codecell
+# Collect all the metrics we care about as a dictionary
+collect_scores = \
+dict(lm = lm_scores['test_neg_mean_squared_error']*-1,
+     knn = knn_scores['test_neg_mean_squared_error']*-1,
+     dt = dt_scores['test_neg_mean_squared_error']*-1,
+     bag = bag_scores['test_neg_mean_squared_error']*-1,
+     rf = rf_scores['test_neg_mean_squared_error']*-1)
+
+# Convert to a data frame and reshape
+collect_scores = pd.DataFrame(collect_scores).melt(var_name="Model",value_name="MSE")
+collect_scores
+# %% markdown
+# And Plot
+# %% codecell
+# Get the order of the models
+order = (collect_scores.groupby('Model').mean().sort_values(by="MSE").index.tolist())
+
+# Plot
+(
+    ggplot(collect_scores,
+          aes(x="Model",y="MSE")) +
+    geom_boxplot() +
+    scale_x_discrete(limits=order) +
+    labs(x="Model",y="Mean Squared Error") +
+    coord_flip() +
+    theme_minimal() +
+    theme(dpi=150)
+)
+# %% markdown
+# Lower is better. The linear model appears to do the best here.
+# %% markdown
+# # Tuning Hyper-parameters
+#
+# As we learned this week in the synchronous lectures, there are a number of parameters that we can tweak/tune that will change our model's performance.
+#
+# For example, recall the K-Nearest Neighbors model. The value we set `k` (or `n_neighbors` in `sklearn`) at (i.e. how many neighbors in the training data that we look at when making our prediction for the test data) determines the degree to which we **overfit** or **underfit** the data.
+# %% codecell
+set_k = dict()
+for k in [1,5,10,50,100,250]:
+    score = cross_validate(KNN(n_neighbors=k),
+                           train_X,train_y,
+                           cv = fold_generator,
+                           scoring =use_metrics)
+    s = score['test_neg_mean_squared_error']
+    set_k[k] = s.mean()
+
+set_k
+# %% markdown
+# As we can see from the above example, when we set higher values of `k`, we get a better out of sample fit (`k = 1` being the worse), but after `k = 50`, we shift out of overfitting territory and into underfitting territory. So choosing the right value of `k` is crucial to making this method work.
+# %% markdown
+# **Let's learn how to systematically tune parameters using `sklearn`'s `GridSearchCV`.**
+# %% markdown
+# ## `GridSearchCV`
+#
+# A Grid search performance an exhaustive search over specified parameter values for an estimator. That is, we specify all potential values our tuning parameter can take on and then we use cross-validation to compare the out-of-sample performance for different parameter configurations. The result is that we can identify the parameter that performs best.
+# %% markdown
+# To list off all the parameters for a model:
+# %% codecell
+mod = KNN() # Initialize the model class
+mod.get_params() # report all the available tunning parameters
+# %% markdown
+# We can read `sklearn`'s documentation to learn what each parameter does. But for now, let's focus on `n_neighbors`.
+#
+# For the grid search, we just need to pass it a dictionary of all the tuning parameter values that we want to explore.
+# %% codecell
+knn_tune_params = {'n_neighbors':[1, 10, 25, 35, 50, 75, 100, 250]}
+# %% markdown
+# From there we wrap the model method in the `GridSearchCV()` class. Note `n_jobs` just tells `sklearn` the number of cores to use on your computer to run the model. Since we're running the same model many times under different configurations, we can parallelize the process so it runs quicker.
+# %% codecell
+tune_knn = GridSearchCV(KNN(),knn_tune_params,
+                        cv = fold_generator,
+                        scoring='neg_mean_squared_error',
+                        n_jobs=4)
+# %% markdown
+# We then `.fit()` the model as per usual
+# %% codecell
+tune_knn.fit(train_X,train_y)
+# %% markdown
+# Once fit, the model reports back the best fitting parameters.
+# %% codecell
+tune_knn.best_params_
+# %% codecell
+tune_knn.best_score_
+# %% markdown
+# We can also gather information on the other attempts
+# %% codecell
+tune_knn.cv_results_
+# %% markdown
+# ## Model Tuning
+# %% markdown
+# With the above in hand, let's tune our hyperparameters for our various models. We've already tuned our KNN. Let's do the same for the other models. (_Note_: For the linear model, there are no hyperparameters, and Bagging is an ensemble approach rather than it's own model, so we won't consider it in our tune.)
+# %% markdown
+# ### Decision Tree
+# %% markdown
+# All the parameters for a decision tree. Let's focus on `max_depth`.
+# %% codecell
+DTree().get_params()
+# %% codecell
+tune_dt = GridSearchCV(DTree(),{'max_depth':[i for i in range(10)]},
+                        cv = fold_generator,
+                        scoring='neg_mean_squared_error',
+                        n_jobs=4)
+# %% codecell
+tune_dt.fit(train_X,train_y)
+# %% codecell
+tune_dt.best_params_
+# %% codecell
+tune_dt.best_score_
+# %% markdown
+# ### Random Forest
+# %% markdown
+# For the random forest, we see many of the same parameters as a decision tree, which makes sense given how the random forest works. We'll focus on `max_depth` and `n_estimators` (i.e. the number of trees to grow and ensemble across) and `max_features` (i.e. the number of predictors to consider when growing each tree).
+#
+# Note that there are only three features here, so there is only so much the randomness in the Random Forest will help out, but as the feature space grows, Random Forest becomes a very useful learning method.
+# %% codecell
+RF().get_params()
+# %% codecell
+rf_params = {'max_depth':[1,2,3],
+             'n_estimators':[100,500,1000],
+              'max_features': [1,2]} # Only have three total.
+tune_rf = GridSearchCV(RF(),rf_params,
+                        cv = fold_generator,
+                        scoring='neg_mean_squared_error',
+                        n_jobs=4)
+# %% codecell
+# This model will take longer to run given all the tuning parameters we're exploring
+tune_rf.fit(train_X,train_y)
+# %% codecell
+tune_rf.best_params_
+# %% codecell
+tune_rf.best_score_
+# %% markdown
+# # Modeling Pipeline
+# %% markdown
+# Let's piece together all these steps as one seamless pipeline!
+# %% codecell
+# (0) Split the data
+train_X, test_X, train_y, test_y = train_test_split(X,y,test_size=.25,random_state=1988)
+
+# (1) Set the folds index to ensure comparable samples
+fold_generator = KFold(n_splits=5, shuffle=True,random_state=111)
+
+# (2) Next specify the preprocessing steps
+preprocess = ColumnTransformer(transformers=[('num', pp.MinMaxScaler(), ['BATHRM','ROOMS','LANDAREA'])])
+
+
+# (3) Next Let's create our model pipe (note for the model we leave none as a placeholder)
+pipe = Pipeline(steps=[('pre_process', preprocess),
+                       ('model',None)])
+
+
+# (4) Specify the models and their repsective tuning parameters.
+# Note the naming convention here to reference the model key
+search_space = [
+    # Linear Model
+    {'model' : [LM()]},
+
+    # KNN with K tuning param
+    {'model' : [KNN()],
+     'model__n_neighbors':[10,15,20,25,30]},
+
+    # Decision Tree with the Max Depth Param
+    {'model': [DTree()],
+     'model__max_depth':[1,2,3,5]},
+
+    # The Bagging decision tree model
+    {'model': [Bag()]},
+
+    # Random forest with the N Estimators tuning param
+    {'model' : [RF()],
+     'model__max_depth':[1,2,3],
+     'model__n_estimators':[500,1000,1250]},
+]
+
+
+# (5) Put it all together in the grid search
+search = GridSearchCV(pipe, search_space,
+                      cv = fold_generator,
+                      scoring='neg_mean_squared_error',
+                      n_jobs=4)
+
+# (6) Fit the model to the training data
+search.fit(train_X,train_y)
+# %% markdown
+# Let's look at the best fit score from the scan.
+# %% codecell
+search.best_score_ # Mean out-of-sample (CV) error
+# %% markdown
+# Look at the best model
+# %% codecell
+search.best_params_
+# %% markdown
+# # Test Performance
+#
+# Let's assume that our work is all done. We scanned the tuning parameters for all our candidate models and found the best performing model. Let's now see how well it does on the test data that it wasn't trained on.
+#
+# Note that our new data is automatically preprocessed before being fit thanks to setting everything up as a pipeline!
+# %% codecell
+# Predict() method will use the best model out of the scan
+pred_y = search.predict(test_X)
+# %% codecell
+m.mean_squared_error(test_y,pred_y)
+# %% codecell
+m.r2_score(test_y,pred_y)
+# %% markdown
+# Visualize
+# %% codecell
+(
+    ggplot(pd.DataFrame(dict(pred=pred_y,truth=test_y)),
+          aes(x='pred',y="truth")) +
+    geom_point(alpha=.75) +
+    geom_abline(linetype="dashed",color="darkred",size=1) +
+    theme_bw() +
+    theme(figure_size=(10,7))
+)

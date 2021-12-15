@@ -4,6 +4,7 @@ import os
 import time
 import random
 import requests
+import PyPDF2
 import urllib.request # For downloading files from url
 from bs4 import BeautifulSoup
 
@@ -11,7 +12,6 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Download Heating Degree Data and Cooling Degree Day .txt files
-
 def download_HDD_CDD(store,url,type):
     # Set webpage
     page = requests.get(url)
@@ -23,8 +23,8 @@ def download_HDD_CDD(store,url,type):
         # Create list to store links from table
         urls = []
 
-        # Skip table header and store all year links
-        for cell in table.select('a')[5:]:
+        # Skip table header and store all year links (starting with 1998, because the 1997 file is formatted so horribly that it's not worth dealing with as an edge case)
+        for cell in table.select('a')[6:]:
             link = cell['href']
             full_url = url + link
             urls.append(full_url)
@@ -76,16 +76,6 @@ download_HDD_CDD(hdd_store,hdd_url,'HDD')
 cdd_store = '/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data/CDD_Data'
 cdd_url = 'https://ftp.cpc.ncep.noaa.gov/htdocs/products/analysis_monitoring/cdus/degree_days/archives/Cooling%20Degree%20Days/monthly%20cooling%20degree%20days%20state/'
 download_HDD_CDD(cdd_store,cdd_url,'CDD')
-
-# Download December 1997 CDD file (edge case, weird formatting)
-url = 'https://ftp.cpc.ncep.noaa.gov/htdocs/products/analysis_monitoring/cdus/degree_days/archives/Cooling%20Degree%20Days/monthly%20cooling%20degree%20days%20state/1997/dec%201997'
-spl = 'monthly%20cooling%20degree%20days%20state/'
-file_name = url.split(spl)[1].split("/")[1].replace("%","") + '.txt'# Split link to isolate file name
-# Open and download file
-response = urllib.request.urlopen(url)
-file = open(file_name, 'wb')
-file.write(response.read())
-file.close()
 
 ###_____________________________________________________________________________________________________
 
@@ -143,5 +133,30 @@ temp_df = temp_df.rename(columns={"State_x":"State","Year_x":"Year"})
 temp_df = temp_df[['State','Year','State_Year','Total_HDD','Total_CDD']]
 
 # Store as .csv file
-os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data')
+os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Clean_Data')
 temp_df.to_csv('HDD_CDD.csv',index = False, header=True)
+
+###_____________________________________________________________________________________________________
+
+norm_hdd_file = '/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data/30_Yr_Norm_HDDs.csv'
+
+norm_hdd = pd.read_csv(norm_hdd_file)
+norm_hdd['State'] = norm_hdd['State'].str.upper()
+norm_hdd = norm_hdd.rename(columns={"30_Yr_Norm_HDD":"30NormHDD"})
+norm_hdd['30NormHDD'] = norm_hdd['30NormHDD'].astype(int)
+norm_hdd.dtypes
+
+# Merge Norm HDDs onto HDD/CDD
+temp_df = temp_df.merge(norm_hdd, on='State',how='left')
+temp_df.dtypes
+
+temp_df['Year'] = temp_df['Year'].astype(int)
+temp_df['Total_HDD'] = temp_df['Total_HDD'].astype(int)
+temp_df['Total_CDD'] = temp_df['Total_CDD'].astype(int)
+temp_df['State'] = temp_df['State'].astype(str)
+temp_df['State_Year'] = temp_df['State_Year'].astype(str)
+temp_df.dtypes
+
+# Store as .csv file
+os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Clean_Data')
+temp_df.to_csv('Temperature_Variables.csv',index = False, header=True)

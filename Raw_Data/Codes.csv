@@ -1,21 +1,28 @@
-MSN Code,Description
-CLRCB,Coal consumed by the residential sector
-CLRCV,Coal expenditures in the residential sector
-DFRCB,Distillate fuel oil consumed by the residential sector
-DFRCV,Distillate fuel oil expenditures in the residential sector
-ESRCB,"Electricity consumed by (i.e., sold to) the residential sector"
-ESRCV,Electricity expenditures in the residential sector
-HLRCB,Hydrocarbon gas liquids consumed by the residential sector
-HLRCV,Hydrocarbon gas liquids expenditures in the residential sector
-KSRCB,Kerosene consumed by the residential sector
-KSRCV,Kerosene expenditures in the residential sector
-NGRCB,Natural gas consumed by (delivered to) the residential sector
-NGRCV,Natural gas expenditures in the residential sector
-PARCB,All petroleum products consumed by the residential sector
-PARCV,All petroleum products total expenditures in the residential sector
-PQRCB,Propane consumed by the residential sector
-PQRCV,Propane expenditures in the residential sector
-TERCB,Total energy consumed by the residential sector
-TERCD,Total energy average price in the residential sector
-TERCV,Total energy expenditures in the residential sector
-TERPB,Total energy consumption per capita in the residential sector
+Variable Name,MSN Code,Description,Unit
+Coal_Consumed,CLRCB,Coal consumed by the residential sector,Billion Btu
+Coal_Price,CLRCD,Coal price in the residential sector,Dollars per million Btu
+Coal_Exp,CLRCV,Coal expenditures in the residential sector,Million dollars
+FO_Consumed,DFRCB,Distillate fuel oil consumed by the residential sector,Billion Btu
+FO_Price,DFRCD,Distillate fuel oil price in the residential sector,Dollars per million Btu
+FO_Exp,DFRCV,Distillate fuel oil expenditures in the residential sector,Million dollars
+EL_Consumed,ESRCB,"Electricity consumed by (i.e., sold to) the residential sector",Billion Btu
+EL_Price,ESRCD,Electricity price in the residential sector,Dollars per million Btu
+EL_Exp,ESRCV,Electricity expenditures in the residential sector,Million dollars
+LPG_Consumed,HLRCB,Hydrocarbon gas liquids consumed by the residential sector,Billion Btu
+LPG_Price,HLRCD,Hydrocarbon gas liquids price in the residential sector,Dollars per million Btu
+LPG_Exp,HLRCV,Hydrocarbon gas liquids expenditures in the residential sector,Million dollars
+KE_Consumed,KSRCB,Kerosene consumed by the residential sector,Billion Btu
+KE_Price,KSRCD,Kerosene price in the residential sector,Dollars per million Btu
+KE_Exp,KSRCV,Kerosene expenditures in the residential sector,Million dollars
+NG_Consumed,NGRCB,Natural gas consumed by (delivered to) the residential sector,Billion Btu
+NG_Price,NGRCD,Natural gas price in the residential sector,Dollars per million Btu
+NG_Exp,NGRCV,Natural gas expenditures in the residential sector,Million dollars
+Propane_Consumed,PQRCB,Propane consumed by the residential sector,Billion Btu
+Propane_Price,PQRCD,Propane price in the residential sector,Dollars per million Btu
+Propane_Exp,PQRCV,Propane expenditures in the residential sector,Million dollars
+Total_Energy_Consumed,TERCB,Total energy consumed by the residential sector,Billion Btu
+Total_Avg_Price,TERCD,Total energy average price in the residential sector,Dollars per million Btu
+Total_Exp,TERCV,Total energy expenditures in the residential sector,Million dollars
+Wood_Consumed,WDRCB,Wood energy consumed by the residential sector,Billion Btu
+Wood_Price,WDRCD,Wood energy price in the residential sector,Dollars per million Btu
+Wood_Exp,WDRCV,Wood energy expenditures in the residential sector,Million dollars
