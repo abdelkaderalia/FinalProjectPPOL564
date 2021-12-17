@@ -30,7 +30,7 @@ dat = pd.read_csv("Complete_Data.csv")
 dat.shape
 
 dat.columns
-AvgPct = dat.groupby('State')[['Percent_Allocation']].sum().reset_index()
+AvgPct = dat.groupby('State')[['Percent_Allocation']].mean().reset_index()
 
 #Preparing for Inner Join
 usa.rename(columns={'STATE_NAME':'State'},inplace=True)
@@ -54,7 +54,7 @@ plt.tight_layout()
 divider = make_axes_locatable(ax)
 cax = divider.append_axes("right", size="5%")
 AvgPct.plot(column='Percent_Allocation',cmap='OrRd',legend=True,ax=ax,cax=cax)
-plt.savefig('plot2.png',bbox_inches = 'tight')
+plt.savefig('Heatmap.png',bbox_inches = 'tight')
 
 
 dat.dtypes

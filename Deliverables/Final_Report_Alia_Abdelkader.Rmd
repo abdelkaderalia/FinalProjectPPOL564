@@ -3,13 +3,13 @@ title: 'Predicting the LIHEAP Funding Formula: Final Report'
 author: "Alia Abdelkader"
 date: "16 December 2021"
 output:
+  pdf_document: default
   html_document:
     css: style.css
-  pdf_document: default
 subtitle: 'PPOL 564 - Data Science I: Foundations - Fall 2021'
 ---
 
-#### __Word Count__: 2859
+#### __Word Count__: 2860
 
 #### __Github Repository__: https://github.com/abdelkaderalia/FinalProjectPPOL564
 
@@ -39,9 +39,9 @@ The Congressional Research Service report names several datasets that I pulled v
 
 #### __*Dependent Variable*__
 
-The dependent variable is the percent of LIHEAP funds allocated to each state in a given year, before hold-harmless measures were applied. Because the actual LIHEAP formula is not available, I received this data directly from the LIHEAP Program, whom I work with as a scholar with the Massive Data Institute. A map of average percent allocation to states from 2006-2019 can be found in Figure 1 below. This plot shows that most states would receive less than 1% of LIHEAP funds were it not for hold-harmless provisions. Predictably, large states like California and Texas would receive a proportionately higher percentage of the allocation.
+The dependent variable is the percent of LIHEAP funds allocated to each state in a given year, before hold-harmless measures were applied. Because the actual LIHEAP formula is not available, I received this data directly from the LIHEAP Program, whom I work with as a scholar with the Massive Data Institute. A map of average percent allocation to states from 2006-2019 can be found in Figure 1 below. This plot shows that most states would receive far less than 1% of LIHEAP funds were it not for hold-harmless provisions. Predictably, large states like California and Texas would receive a proportionately higher percentage of the allocation.
 
-![](/Users/Alia/Documents/Github/FinalProjectPPOL564/Deliverables/Report Figures/Map_Percent.png)
+![](/Users/Alia/Documents/Github/FinalProjectPPOL564/Deliverables/Report Figures/Heatmap.png)
 
 In order to combat right-skewness of the dependent variable, I applied a log transformation as shown in Figures 2 and 3 below. When tuning and comparing my models, I tested models that used both Percent_Allocation and log(Percent_Allocation), and the log transformation led to better model performance.
 
