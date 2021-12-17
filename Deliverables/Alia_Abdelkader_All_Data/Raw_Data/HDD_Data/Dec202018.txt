@@ -1,0 +1,117 @@
+ 
+              HEATING DEGREE DAY DATA MONTHLY SUMMARY
+     POPULATION-WEIGHTED STATE,REGIONAL,AND NATIONAL AVERAGES
+              CLIMATE PREDICTION CENTER-NCEP-NWS-NOAA
+ 
+                     MONTHLY DATA FOR DEC 2018
+                 ACCUMULATIONS ARE FROM JULY 1, 2018
+         -999 = NORMAL LESS THAN 100 OR RATIO INCALCULABLE
+ 
+   STATE         MONTH MON  MON     CUM   CUM   CUM   CUM   CUM
+                 TOTAL DEV  DEV     TOTAL DEV   DEV   DEV   DEV
+                       FROM FROM          FROM  FROM  FROM  FROM
+                       NORM L YR          NORM  L YR  NORM  L YR
+                                                      PRCT  PRCT
+  
+ ALABAMA           487 -104  -71    1005  -112    14   -10     1
+ ALASKA           1372 -201  103    3921 -1080  -392   -22    -9
+ ARIZONA           480  -10   98     787   -76   342    -9    77
+ ARKANSAS          639 -100  -59    1418    23   183     2    15
+ CALIFORNIA        447  -36  104     707  -266    96   -27    16
+ COLORADO         1139  -61   75    2785  -260   269    -9    11
+ CONNECTICUT       920  -98 -166    2154   -99    21    -4     1
+ DELAWARE          746 -104 -143    1598  -132    12    -8     1
+ DISTRCT COLUMBIA  663 -112 -132    1410   -73    61    -5     5
+ FLORIDA           120  -40   10     180   -50    24   -22    15
+ GEORGIA           523  -75  -35    1076   -49    41    -4     4
+ HAWAII              0    0    0       0     0    -1  -999  -999
+ IDAHO            1147  -41  -41    2771  -152   -35    -5    -1
+ ILLINOIS          980 -174 -173    2427     0   116     0     5
+ INDIANA           904 -162 -204    2219   -34    19    -2     1
+ IOWA             1131 -177 -144    2860    60   197     2     7
+ KANSAS            919  -95  -49    2124    93   265     5    14
+ KENTUCKY          743 -126 -158    1723   -57    46    -3     3
+ LOUISIANA         347  -62  -64     681   -11    24    -2     4
+ MAINE            1285   25 -128    3126    92   293     3    10
+ MARYLAND          784  -95 -120    1712  -102    45    -6     3
+ MASSACHUSETTS     975  -70 -179    2281   -84   118    -4     5
+ MICHIGAN         1020 -138 -234    2535   -85    41    -3     2
+ MINNESOTA        1303 -242 -226    3409  -110   137    -3     4
+ MISSISSIPPI       466  -89  -66     960   -53    45    -5     5
+ MISSOURI          897 -117  -92    2130    82   234     4    12
+ MONTANA          1184 -140 -135    3298  -243    19    -7     1
+ NEBRASKA         1096 -124  -67    2682    45   273     2    11
+ NEVADA            702  -59   52    1318  -250   189   -16    17
+ NEW HAMPSHIRE    1164  -62 -173    2823   -98   171    -3     6
+ NEW JERSEY        860  -82 -160    1924   -89     5    -4     0
+ NEW MEXICO        867  -58   84    1873  -134   407    -7    28
+ NEW YORK          923  -93 -162    2092  -146    91    -7     5
+ NORTH CAROLINA    623  -70  -81    1345   -24   -22    -2    -2
+ NORTH DAKOTA     1365 -265 -163    3866   -13   230     0     6
+ OHIO              890 -147 -206    2157   -99   -35    -4    -2
+ OKLAHOMA          731  -68  -15    1560    74   250     5    19
+ OREGON            812   -7  -12    2030  -100   -39    -5    -2
+ PENNSYLVANIA      898 -108 -175    2138   -96   -41    -4    -2
+ RHODE ISLAND      903  -52 -165    2141    40    87     2     4
+ SOUTH CAROLINA    520  -70  -31    1065   -29    19    -3     2
+ SOUTH DAKOTA     1217 -169  -92    3134   -59   199    -2     7
+ TENNESSEE         690  -92 -109    1559   -16    11    -1     1
+ TEXAS             409  -61  -39     816    24   142     3    21
+ UTAH             1144  -18   74    2587  -105    89    -4     4
+ VERMONT          1236  -55 -169    3090   -32   105    -1     4
+ VIRGINIA          754  -69  -95    1624   -82    24    -5     2
+ WASHINGTON        807  -66 -103    2127  -220  -102    -9    -5
+ WEST VIRGINIA     843  -88 -143    1941  -102     3    -5     0
+ WISCONSIN        1135 -199 -233    2971   -46    70    -2     2
+ WYOMING          1273  -58   21    3256  -203   171    -6     6
+   REGION
+ NEW ENGLAND      1013  -65 -169    2400   -62   112    -3     5
+ MIDDLE ATLANTIC   902  -96 -166    2071  -120    32    -5     2
+ E N CENTRAL       974 -161 -206    2419   -53    43    -2     2
+ W N CENTRAL      1085 -163 -128    2714    19   210     1     8
+ SOUTH ATLANTIC    490  -65  -51    1026   -57    21    -5     2
+ E S CENTRAL       612 -103 -104    1353   -57    26    -4     2
+ W S CENTRAL       455  -65  -42     930    25   141     3    18
+ MOUNTAIN          885  -43   60    1981  -166   236    -8    14
+ PACIFIC           525  -38   67    1006  -247    58   -20     6
+ 
+ UNITED STATES     728  -89  -80    1652   -87    77    -5     5
+              GAS HOME HEATING CUSTOMER WEIGHTED
+   REGION
+ NEW ENGLAND       972  -72 -174    2288   -72    98    -3     5
+ MIDDLE ATLANTIC   900  -95 -165    2064  -117    30    -5     1
+ E N CENTRAL       975 -160 -206    2422   -53    45    -2     2
+ W N CENTRAL      1087 -163 -129    2714    19   209     1     8
+ SOUTH ATLANTIC    624  -76  -74    1334   -65    24    -5     2
+ E S CENTRAL       618 -104 -106    1370   -58    27    -4     2
+ W S CENTRAL       471  -66  -41     968    26   145     3    18
+ MOUNTAIN          951  -48   58    2177  -180   230    -8    12
+ PACIFIC           494  -37   82     886  -254    73   -22     9
+ 
+ UNITED STATES     787  -98  -88    1803   -95    84    -5     5
+              OIL HOME HEATING CUSTOMER WEIGHTED
+   REGION
+ NEW ENGLAND      1038  -60 -166    2471   -51   123    -2     5
+ MIDDLE ATLANTIC   907  -96 -166    2081  -123    40    -6     2
+ E N CENTRAL       991 -162 -218    2480   -70    23    -3     1
+ W N CENTRAL      1244 -216 -180    3247   -54   173    -2     6
+ SOUTH ATLANTIC    679  -77  -92    1465   -70    15    -5     1
+ E S CENTRAL       694 -109 -128    1580   -44    28    -3     2
+ W S CENTRAL       456  -67  -45     935    21   130     2    16
+ MOUNTAIN         1041  -63  -21    2502  -188    64    -7     3
+ PACIFIC           757  -40  -41    1888  -183   -51    -9    -3
+ 
+ UNITED STATES     918  -88 -154    2145   -91    60    -4     3
+            ELECTRIC HOME HEATING CUSTOMER WEIGHTED
+   REGION
+ NEW ENGLAND       982  -74 -172    2314   -75    95    -3     4
+ MIDDLE ATLANTIC   900  -98 -168    2082  -113    15    -5     1
+ E N CENTRAL       953 -161 -203    2356   -55    31    -2     1
+ W N CENTRAL      1052 -153 -116    2615    34   219     1     9
+ SOUTH ATLANTIC    388  -58  -34     793   -53    20    -6     3
+ E S CENTRAL       616 -102 -103    1362   -55    24    -4     2
+ W S CENTRAL       437  -64  -42     887    22   134     3    18
+ MOUNTAIN          728  -33   68    1517  -141   262    -9    21
+ PACIFIC           601  -40   30    1296  -229    21   -15     2
+ 
+ UNITED STATES     577  -73  -53    1268   -71    64    -5     5

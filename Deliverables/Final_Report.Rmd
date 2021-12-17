@@ -1,0 +1,112 @@
+---
+  title: "Predicting the LIHEAP Funding Formula: Final Report"
+  subtitle: "PPOL 564 - Data Science I: Foundations - Fall 2021"
+  author: "Alia Abdelkader"
+  date: 12/16/2021 
+  output: 
+    html_document:
+      css: style.css
+---
+
+#### __Word Count__: `r as.integer(sub("(\\d+).+$", "\\1", system(sprintf("wc -w %s", knitr::current_input()), intern = TRUE)))-29`
+
+#### __Github Repository__: https://github.com/abdelkaderalia/FinalProjectPPOL564
+
+### __*1. Introduction*__
+
+Funding for social safety net programs has long been a contentious topic, and the federal government uses various different program structures to allocate funds to those who might benefit. One of those program structures is a block grant, which uses a formula to allocate available funds to different parties based on a collection of data inputs. Opponents of block grants believe that this structure can be prohibitive to an equitable distribution of funds, because formulas may not be dynamic enough to capture all factors that are relevant in considering which parties should receive more funding. The aim of this analysis is to use LIHEAP as a case study and attempt to predict its funding formula, and analyze which formula inputs are most influential in determining what percentage of appropriated funds each state should receive. This report follows my efforts in data collection, wrangling, and analysis, followed by the machine learning component, and evaluation of results. 
+
+### __*2. Problem Statement and Background*__
+
+The Low Income Home Energy Assistance Program (LIHEAP) has been administered by the Department of Health and Human Services (HHS) since 1981 to provide low-income households with financial assistance to cover their energy bills and weatherization of their homes.
+
+LIHEAP is one of only 21 federally funded block grants as of 2020.  The funding structure of a black grant dictates total sum of federal benefits is distributed by using a funding formula that allocates a percentage of the total funds appropriated by Congress to each grantee (U.S. state, territory, or indigenous tribe). States then distribute the funds to eligible households that apply for benefits. 
+
+The LIHEAP Formula was inherited from its predecessor program, the Low Income Energy Assistance Program (LIEAP), which only operated for one year in 1980.  This “old” formula favored cold-weather states in terms of funding because it only used data from specific years before 1980, so funding percentages were static.
+
+Congress' 1984 reauthorization of LIHEAP dictated that the formula should be updated yearly with recent population and energy data. The exact LIHEAP formula calculation is not published, but there is awareness of the general metrics and data sources used as formula inputs. This project aims to call upon the same data sources used by LIHEAP and predict the percentage allocation to each state, with one caveat.
+
+The 1984 LIHEAP statute outlined two “hold-harmless” measures to attempt a more equitable funding distribution.  Firstly, if the total LIHEAP appropriation for a given fiscal year exceeds \$1.975 billion, then no state may receive less funding than they were allocated in 1984. Secondly, if the total appropriation exceeds \$2.25 billion, then any state that would receive less than 1% under the formula calculation must receive whatever percentage they would have received of a $2.14 billion allocation. These two provisions, which are applied year to year, reduce the percentage for some states and increase it for others. 
+
+In my analysis, I have elected to exclude hold-harmless provisions and use the available data to predict the percentage that a state would have received without them. This allows me to more accurately assess the permutation importance of different variables in the prediction of the actual percentages. Hold-harmless provisions, which are triggered primarily by the size of the total allocation, reduce or increase allocations to an arbitrarily level that tells us very little about how the other data affected a state’s allocation in a given year.
+
+
+### __*3. Data*__
+
+The Congressional Research Service report names several datasets that I pulled various predictors from. The unit of analysis is State-Year, and the final dataset includes all 50 states and Washington, DC for the years 2006 to 2019. There is no missingness in the data. The data wrangling process was very involved and required different steps for each dataset. I used __pandas__ to manipulate and merge all dataframes from different sources, and the final dataframe used in my analysis had 714 observations and 36 predictors.
+
+#### __*Dependent Variable*__
+
+The dependent variable is the percent of LIHEAP funds allocated to each state in a given year, before hold-harmless measures were applied. Because the actual LIHEAP formula is not available, I received this data directly from the LIHEAP Program, whom I work with as a scholar with the Massive Data Institute. A map of average percent allocation to states from 2006-2019 can be found in Figure 1 below. This plot shows that most states would receive less than 1% of LIHEAP funds were it not for hold-harmless provisions. Predictably, large states like California and Texas would receive a proportionately higher percentage of the allocation.
+
+![](/Users/Alia/Documents/Github/FinalProjectPPOL564/Deliverables/Report Figures/Map_Percent.png)
+
+In order to combat right-skewness of the dependent variable, I applied a log transformation as shown in Figures 2 and 3 below. When tuning and comparing my models, I tested models that used both Percent_Allocation and log(Percent_Allocation), and the log transformation led to better model performance.
+
+![](/Users/Alia/Documents/Github/FinalProjectPPOL564/Deliverables/Report Figures/Percent1.png)
+![](/Users/Alia/Documents/Github/FinalProjectPPOL564/Deliverables/Report Figures/Percent2.png)
+
+#### __*Independent Variables*__
+
+##### *Temperature Variables*
+I used state-level data from the National Oceanic and Atmospheric Administration (NOAA) for variables relating to temperature, including Heating Degree Days (HDD), Cooling Degree Days (CDD), and a 30-year average of HDD weighted by state population. I used __BeautifulSoup__ to scrape urls to download the “December” HDD and CDD files for each year, used urllib to download each file, and used pandas to read each one as a fixed width file to add the data to a single data frame. This was a particular challenge and required a complex function to loop through the each file and manipulate the columns to create the desired pandas dataframe. Several corrections needed to be made state names that were spelled incorrectly.
+
+I also created “Lag_HDD” and “Lag_CDD” variables, which is the state’s HDD or CDD from two years prior. The 30-year weighted HDD was pulled manually from a single PDF for all 51 states; PDF scraping using __pyPDF2__ proved to be too laborious due to the complicated metadata of the file.
+
+##### *Energy Variables*
+Using the the Department of Energy - Energy Information Administration's published data from the State Energy Data System (SEDS), I pulled together variables on annual residential energy consumption, expenditure, and pricing by state (each one with its own data file), and manipulated them in pandas, looking up values by state and year in the source dataframe and filling in the output dataframe. A table of those variables can be found in Figure 4.
+
+![](/Users/Alia/Documents/Github/FinalProjectPPOL564/Deliverables/Report Figures/SEDS_Variables.png)
+Also, from HHS I received their estimates of the number of Low-Income Households that use each fuel source, which they compute based on the American Community Survey Public Use Microdata Sample (PUMS). A plot of those estimates can be found in Figure 5 below. As shown, across all states, Natural Gas is the most commonly used fuel source, followed by electric.
+
+![](/Users/Alia/Documents/Github/FinalProjectPPOL564/Deliverables/Report Figures/fuelplot.png)
+
+#### __*Eligible Households*__
+
+Data on the number of households that are federally eligible for LIHEAP was pulled from the LIHEAP Performance Management Data Warehouse. This metric is computed based on five-year data from the American Community Survey, based on a maximum eligible income level whichever is higher: 150% of the poverty guidelines (FPG) or 60% of a state's median income (SMI).
+
+After pulling data from each source into its own data frame, I merged all of them together into one final dataframe, joining on State-Year as the identifier. State names were standardized, which generally required correcting other forms of DC to "District of Columbia" and converting state abbreviations to state names using a dictionary. All state names were converted to UPPERCASE to avoid any confusion.
+
+### __*4. Analysis*__
+
+I used Python's Scikit-learn package to execute the machine learning models in this analysis. After splitting the data 75/25 between training and test data, I used a machine learning pipeline to automate the workflow. This pipeline included pre-processing (which involved scaling the predictors), model turning, cross validation, evaluating of model accuracy, and model selection. Cross validation was done with the k-Fold validation method; it is a key part of this process, as it allows us to best model with only part of the training data as an input, reserving a small subset to use as a proxy for test data. After the user specifies a number for "k" (in this analysis, k=5), the k-Fold method splits the data into k groups, creating new "training" subsets, and then repeats this process and computes an average estimate across all groups and iterations.
+
+All visualizations in this report were generated using seaborn, plotnine, matplotlib, GeoPandas, and SKLearn.
+
+#### __*Modeling*__
+
+Once we have analyzed our independent variables that will be used to determine hospital pricing, our dependent, continuous variable, and prepocessed all variables accordingly, we built a best-performing machine learning model.
+
+The machine learning pipeline included 5 different types of models to predict the continuous outcome:
+
+1. __Linear Model Classifier__ 
+2. __Bagging Regressor__ 
+3. __K-Nearest Neighbors Classifier__ 
+4. __Decision Tree Classifier__ 
+5. __Random Forest Classifier__
+
+For the most part, I included all of the predictors that I collected in my models, except for *State*, *Year* and *State_Year*. I tested 4 different model specifications:
+
+1. Used log(*Percent_Allocation* * 100) as Y, and used *Total_HDD* and *Total_CDD*, not lagged variables. Included all other predictors
+2. Same as Specification 1, but excluded the variable *Total_Exp* to better evaluate permutation importance of other variables
+3. Same as Specification 2, but did not apply a log transformation to *Percent_Allocation*
+4. Same as Specification 2, but used *Lag_HDD* and *Lag_CDD*
+
+*Total_Exp* was excluded in the latter specifications because its permutation importance (as discussed later on) far exceeded that of all the other predictors, making it impossible to see which other variables were at all important.
+
+I used mean squared error (MSE as the metric to evaluate model performance; this method measures the average squares of errors, which are the differences between the model's fitted values and the true values of the observations in the data. The best performing model will have the lowest MSE.
+
+### __*5. Results*__
+
+The best performing model based on minimizing MSE was the Bagging Regressor, and the best model specification was Specification 2. Upon evaluating the results, we found that the MSE was 0.0167 and the $R^2$ value, which represents the proportion of variation in the data that can be explained by the model, was .9834. Figure 6 below shows the fit of the model.
+
+![](/Users/Alia/Documents/Github/FinalProjectPPOL564/Deliverables/Report Figures/Model_Fit.png)
+These results demonstrate that the predictors included in the model are strongly correlated to the response. Part of the aim of this project was to evaluate which of the predictors was most influencial. A plot permutation importance of the model's predictors is shown in Figure 7 below. As we can see, the most influential variable in the reduction of MSE was the number of eligible households. This is not a particularly surprising finding, as this statistic is likely to be correlated to state population and it is logical that states with more people will have more people living below the poverty line. However, some interesting findings emerge: that the next two most influential variables are electricity expense and the number of low income households using Fuel Oil/Kerosene as their heating source. This is a finding that would definitely be worth investigating further in future analysis.
+
+The remaining predictors had very low permutation importance and were therefore not influential in predicting the percent allocation. I did consider removing these predictors from the specification, but ultimately decided to include them because, based on literature, the actual LIHEAP formula does include variables on energy consumption, pricing, and expenditure, and temperature data, in some form or other. Because I wanted to match the formula as closely as possible, it would not be accurate to remove them from the specification.
+
+![](/Users/Alia/Documents/Github/FinalProjectPPOL564/Deliverables/Report Figures/Model2_PermutationImportance.png)
+
+### __*6. Discussion*__
+
+Overall, this project was successful in predicting the LIHEAP Formula with high accuracy, despite not knowing the exact variables that the HHS uses in the formula. Further analysis could

@@ -1,27 +1,114 @@
-import geopandas as gpd
-from shapely.geometry import Point, Polygon
-import matplotlib.pyplot as plt
+import os
 import pandas as pd
 import numpy as np
+import missingno as miss
+import seaborn as sns
+from plotnine import *
+import matplotlib.pyplot as plt
+import geopandas as gpd
+from shapely.geometry import Point, Polygon
 %matplotlib inline
-import os
-
+plt.rcParams['axes.labelsize'] = 16
+plt.rcParams['axes.titlesize'] = 16
+plt.rcParams['xtick.labelsize']='x-large'
+plt.rcParams['ytick.labelsize']='x-large'
+import warnings
+warnings.filterwarnings("ignore")
 
 # Change working directory to the folder where the data file is located
-os.chdir('/Users/Alia/Documents/PPOL564/Final Project/')
+os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data')
 
 # Import test dataset to play around with GeoPandas
-usa = gpd.read_file("states_21basic/states.shp")
-
+usa = gpd.read_file("GeoPandas Testing/states_21basic/states.shp")
 usa.head()
-
 usa.plot()
 
-# Import income data from IPUMS USA
-income = np.genfromtxt('Income.dat',
-                     skip_header=0,
-                     skip_footer=1,
-                     names=True,
-                     dtype=None,
-                     delimiter=' ')
-# Dataset appears to be too large...will rerun from IPUMS with fewer samples
+usa['STATE_NAME']=usa['STATE_NAME'].str.upper()
+
+os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Clean_Data')
+dat = pd.read_csv("Complete_Data.csv")
+dat.shape
+
+dat.columns
+AvgPct = dat.groupby('State')[['Percent_Allocation']].sum().reset_index()
+
+#Preparing for Inner Join
+usa.rename(columns={'STATE_NAME':'State'},inplace=True)
+AvgPct=usa.merge(AvgPct,on='State')
+
+os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Deliverables/Report Figures')
+
+#Resizing/Moving Alaska and Hawaii
+m = AvgPct.STATE_ABBR == "HI"
+AvgPct[m] = AvgPct[m].set_geometry(usa[m].translate(54))
+m = AvgPct.STATE_ABBR == "AK"
+AvgPct[m] = AvgPct[m].set_geometry(usa[m].scale(.4,.4,.4).translate(40, -40))
+
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+fig,ax=plt.subplots(1,1,figsize=[11,8])
+#ax.set_title('Dollars Awarded per Eligible Household (LIHEAP)')
+ax.set_xticks([])
+ax.set_yticks([])
+ax.set(title='Figure 1 - Average Percent of LIHEAP Allocation by State, 2006-2019')
+plt.tight_layout()
+divider = make_axes_locatable(ax)
+cax = divider.append_axes("right", size="5%")
+AvgPct.plot(column='Percent_Allocation',cmap='OrRd',legend=True,ax=ax,cax=cax)
+plt.savefig('plot2.png',bbox_inches = 'tight')
+
+
+dat.dtypes
+
+
+dat.head()
+
+LI_Heaters = dat.groupby('Year')[['LI_Coal_Heaters','LI_NG_Heaters','LI_FO_KE_Heaters','LI_LPG_Heaters','LI_EL_Heaters','LI_Wood_Heaters']].sum().reset_index()
+
+LI_Heaters = LI_Heaters.rename(columns={'LI_Coal_Heaters':'Coal','LI_NG_Heaters':'Natural Gas','LI_FO_KE_Heaters':'Fuel Oil/Kerosene','LI_LPG_Heaters':'Liquid Petroleum Gas','LI_EL_Heaters':'Electric','LI_Wood_Heaters':'Wood'})
+
+# convert to long (tidy) form
+dfm = LI_Heaters.melt('Year', var_name='Heaters', value_name='Total')
+
+os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Deliverables/Report Figures')
+
+plt.figure(figsize=(12,8))
+plt.ticklabel_format(style = 'plain')
+ax = sns.lineplot(x="Year",y="Total",hue='Heaters', palette="Dark2", linewidth=2,data=dfm)
+ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+ax.set(title='Figure 5 - Estimated total of Low Income households using each fuel source')
+ax.set(xlabel=None)
+plt.savefig('fuelplot.png',bbox_inches = 'tight')
+
+
+colnames = ['Coal','Natural Gas','Fuel Oil/Kerosene','Liquid Petroleum Gas','Electric','Wood']
+
+# Set a style for the plot
+plt.style.use('ggplot')
+plt.figure(figsize=(20,10))
+# Make a plot
+fig, ax = plt.subplots()
+plt.ticklabel_format(style = 'plain')
+plt.legend([],[], frameon=False)
+ax.set(title='Figure 1 - Estimated total of Low Income households using each fuel source')
+ax.set(xlabel=None)
+
+# Add lines to it
+sns.lineplot(ax=ax,x="Year",y="Total",hue='Heaters', palette="Dark2",legend=False,linewidth=2,data=dfm)
+for line, name in zip(ax.lines, colnames):
+	y = line.get_ydata()[-1]
+	x = line.get_xdata()[-1]
+	if not np.isfinite(y):
+	    y=next(reversed(line.get_ydata()[~line.get_ydata().mask]),float("nan"))
+	if not np.isfinite(y) or not np.isfinite(x):
+	    continue
+	text = ax.annotate(name,
+		       xy=(x, y),
+		       xytext=(0, 0),
+		       color=line.get_color(),
+		       xycoords=(ax.get_xaxis_transform(),
+				 ax.get_yaxis_transform()),
+		       textcoords="offset points")
+#	text_width = (text.get_window_extent(
+#	fig.canvas.get_renderer()).transformed(ax.transData.inverted()).width)
+#	if np.isfinite(text_width):
+#		ax.set_xlim(ax.get_xlim()[0], text.xy[0] + text_width * 1.05)
