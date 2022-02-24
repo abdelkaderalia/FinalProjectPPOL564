@@ -52,7 +52,8 @@ In order to combat right-skewness of the dependent variable, I applied a log tra
 
 
 ##### *Temperature Variables*
-I used state-level data from the National Oceanic and Atmospheric Administration (NOAA) for variables relating to temperature, including Heating Degree Days (HDD), Cooling Degree Days (CDD)^[("Degree Day Statistics", 2021)]. Also, from NOAA by way of the Department of Commerce, I pulled 1970-2000 data that provides a 30-year average of HDD weighted by state population.^[("State, Regional, And National Monthly Heating Degree Days",2000)] I used __BeautifulSoup__^[(Richardson, 2014)] to scrape urls to download the “December” HDD and CDD files to pull the cumulative statistics for each year, used __urllib__ to download each file, and used __pandas__ to read each one as a fixed width file to add the data to a single data frame. This was a particular challenge and required a complex function to loop through the each file and manipulate the columns to create the desired __pandas__ dataframe. Several corrections needed to be made state names that were spelled incorrectly.
+
+I used state-level data from the National Oceanic and Atmospheric Administration (NOAA) for variables relating to temperature, including Heating Degree Days (HDD), Cooling Degree Days (CDD)^[("Degree Day Statistics", 2021)]. Also, from NOAA by way of the Department of Commerce, I pulled 1970-2000 data that provides a 30-year average of HDD weighted by state population.^[("State, Regional, And National Monthly Heating Degree Days",2000)] I used __BeautifulSoup__^[(Richardson, 2014)] to scrape urls to download the “December” HDD and CDD files to pull the cumulative statistics for each year, used __urllib__ to download each file, and used __pandas__ to read each one as a fixed width file to add the data to a single data frame. This was a particular challenge and required a complex function to loop through the each file and manipulate the columns to create the desired __pandas__ dataframe. Several corrections needed to be made to fix state names that were spelled incorrectly. [_The code written to scrape and clean temperature data can be found by clicking here._](https://github.com/abdelkaderalia/FinalProjectPPOL564/blob/main/py/Download_Temp_Data)
 
 I also created “Lag_HDD” and “Lag_CDD” variables, which is the state’s HDD or CDD from two years prior. The 30-year weighted HDD was pulled manually from a single PDF for all 51 states; PDF scraping proved to be too laborious due to the complicated metadata of the file.
 
@@ -60,7 +61,8 @@ Initially, planned to include more data from NOAA, specifically on the count of 
 
 
 ##### *Energy Variables*
-Using the the Department of Energy - Energy Information Administration's published data from the State Energy Data System (SEDS)^[("State Energy Data System (SEDS)", 2021)], I pulled together variables on annual residential energy consumption, expenditure, and pricing by state (each one with its own data file), and manipulated them in __pandas__, looking up values by state and year in the source dataframe and filling in the output dataframe. A table of those variables can be found in Figure 4.
+
+Using the the Department of Energy - Energy Information Administration's published data from the State Energy Data System (SEDS)^[("State Energy Data System (SEDS)", 2021)], I pulled together variables on annual residential energy consumption, expenditure, and pricing by state (each one with its own data file), and manipulated them in __pandas__, looking up values by state and year in the source dataframe and filling in the output dataframe. [_The code written to wrangle energy data can be found by clicking here._](https://github.com/abdelkaderalia/FinalProjectPPOL564/blob/main/py/Download_Energy_Data) A table of those variables can be found in Figure 4.
 
 ![](/Users/Alia/Documents/Github/FinalProjectPPOL564/Deliverables/Report Figures/SEDS_Variables.png)
 
@@ -107,7 +109,7 @@ I used mean squared error (MSE) as the metric to evaluate model performance; thi
 
 ### __*5. Results*__
 
-The best performing model based on minimizing MSE was the Bagging Regressor, and the best model specification was Specification 2. Upon evaluating the results, we found that the MSE was 0.0167 and the $R^2$ value, which represents the proportion of variation in the data that can be explained by the model, was .9834. Figure 6 below shows the fit of the model.
+The best performing model based on minimizing MSE was the Bagging Regressor, and the best model specification was Specification 2. Upon evaluating the results, we found that the MSE was 0.0167 and the $R^2$ value, which represents the proportion of variation in the data that can be explained by the model, was .9834. Figure 6 below shows the fit of the model. [_The code for this model can be found by clicking here._](https://github.com/abdelkaderalia/FinalProjectPPOL564/blob/main/py/Comparing_Tuning_Models_v2.ipynb)
 
 ![](/Users/Alia/Documents/Github/FinalProjectPPOL564/Deliverables/Report Figures/Model_Fit.png)
 
