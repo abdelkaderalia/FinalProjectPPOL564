@@ -16,7 +16,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Change working directory to the folder where the data file is located
-os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Raw_Data')
+os.chdir('/Users/Alia/Documents/Github/LIHEAPFormulaPred/Raw_Data')
 
 # Import test dataset to play around with GeoPandas
 usa = gpd.read_file("GeoPandas Testing/states_21basic/states.shp")
@@ -25,7 +25,7 @@ usa.plot()
 
 usa['STATE_NAME']=usa['STATE_NAME'].str.upper()
 
-os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Clean_Data')
+os.chdir('/Users/Alia/Documents/Github/LIHEAPFormulaPred/Clean_Data')
 dat = pd.read_csv("Complete_Data.csv")
 dat.shape
 
@@ -36,7 +36,7 @@ AvgPct = dat.groupby('State')[['Percent_Allocation']].mean().reset_index()
 usa.rename(columns={'STATE_NAME':'State'},inplace=True)
 AvgPct=usa.merge(AvgPct,on='State')
 
-os.chdir('/Users/Alia/Documents/Github/FinalProjectPPOL564/Deliverables/Report Figures')
+os.chdir('/Users/Alia/Documents/Github/LIHEAPFormulaPred/Deliverables/Report Figures')
 
 #Resizing/Moving Alaska and Hawaii
 m = AvgPct.STATE_ABBR == "HI"
